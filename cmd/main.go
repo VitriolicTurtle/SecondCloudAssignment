@@ -28,8 +28,8 @@ func main() {
 																						// Runs functions based on url typed
 	http.HandleFunc("/repocheck/v1/commits/", secondAssignment.HandlerCommits)
 	http.HandleFunc("/repocheck/v1/issues/", secondAssignment.HandlerIssues)
-//	http.HandleFunc("/conservation/v1/diag/", firstAssignment.HandlerDiag)
 	http.HandleFunc("/repocheck/v1/status/", secondAssignment.HandlerDiag)
+	http.HandleFunc("/repocheck/v1/webhooks/", secondAssignment.WebhookHandler)
 	fmt.Println("Listening on port " + port)
 	log.Fatal(http.ListenAndServe(":" + port, nil))
 }

@@ -3,7 +3,7 @@ package secondAssignment
 import (
   "encoding/json"
 	"net/http"
-  "strings"
+  //"strings"
 )
 
 
@@ -29,10 +29,10 @@ var DBu = UsersDB{}
 var DBl = LabelsDB{}
 
 
-func replyWithAllu(w http.ResponseWriter, DB userStorage){
+func replyWithAllu(w http.ResponseWriter, DB userStorage, auth string){
 
 
-  url := "https://git.gvk.idi.ntnu.no/api/v4/projects/1/members/all?private_token=yicA2z2b1baW9bBMeYUz"
+  url := "https://git.gvk.idi.ntnu.no/api/v4/projects/1/members/all?private_token=" + auth
 	resp, err := http.Get(url)								// GETs url
 	if err != nil {														// If it doesnt work, return error
   	http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
@@ -43,7 +43,7 @@ func replyWithAllu(w http.ResponseWriter, DB userStorage){
   json.NewDecoder(resp.Body).Decode(&tempUser)
 
 
-  iurl := "https://git.gvk.idi.ntnu.no/api/v4/projects/1/issues?private_token=yicA2z2b1baW9bBMeYUz"
+  iurl := "https://git.gvk.idi.ntnu.no/api/v4/projects/1/issues?private_token=" + auth
   resp, err = http.Get(iurl)								  // GETs url
   if err != nil {														// If it doesnt work, return error
     http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
@@ -81,9 +81,9 @@ func replyWithAllu(w http.ResponseWriter, DB userStorage){
 
 
 
-func replyWithAlll(w http.ResponseWriter, DB labelsStorage){
+func replyWithAlll(w http.ResponseWriter, DB labelsStorage, auth string){
 
-  url := "https://git.gvk.idi.ntnu.no/api/v4/projects/1/labels?private_token=yicA2z2b1baW9bBMeYUz"
+  url := "https://git.gvk.idi.ntnu.no/api/v4/projects/1/labels?private_token=" + auth
 	resp, err := http.Get(url)								// GETs url
 	if err != nil {														// If it doesnt work, return error
   	http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
@@ -94,7 +94,7 @@ func replyWithAlll(w http.ResponseWriter, DB labelsStorage){
   json.NewDecoder(resp.Body).Decode(&tempLabel)
 
 
-  lurl := "https://git.gvk.idi.ntnu.no/api/v4/projects/1/issues?private_token=yicA2z2b1baW9bBMeYUz"
+  lurl := "https://git.gvk.idi.ntnu.no/api/v4/projects/1/issues?private_token=" + auth
   resp, err = http.Get(lurl)								  // GETs url
   if err != nil {														// If it doesnt work, return error
     http.Error(w, http.StatusText(http.StatusNotFound), http.StatusNotFound)
@@ -121,23 +121,30 @@ func replyWithAlll(w http.ResponseWriter, DB labelsStorage){
 
 }
 
-
+type findProject struct{
+  Event     	string	`json:"event"`
+}
 
 
 func HandlerIssues(w http.ResponseWriter, r *http.Request) {
 	http.Header.Add(w.Header(), "content-type", "application/json")
-	parts := strings.Split(r.URL.Path, "/")
   var issueType string = r.URL.Query().Get("type")
+  var issueAuth string = r.URL.Query().Get("auth")
 
+  switch r.Method {
+	case http.MethodPost:
+		var myProject findProject
+		err := json.NewDecoder(r.Body).Decode(&myProject)
+		if err != nil {
+			http.Error(w, err.Error(), http.StatusBadRequest)
+		}
 
-	if len(parts) == 6 || parts[1] == "conservation"{
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
+  }
+
   if(issueType == "user"){
-    replyWithAllu(w, &DBu)
+    replyWithAllu(w, &DBu, issueAuth)
   }
   if(issueType == "labels"){
-	replyWithAlll(w, &DBl)
+	replyWithAlll(w, &DBl, issueAuth)
   }
 }
